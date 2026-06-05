@@ -1,7 +1,7 @@
-{
+﻿{
   "name": "com.tasify.claude.host",
   "description": "Tasify Claude Code Bridge",
-  "path": "scripts/run-host.bat",
+  "path": "D:\\GitHub\\Tasify\\host\\scripts\\run-host.bat",
   "type": "stdio",
   "allowed_origins": ["chrome-extension://jnheoacefagphgahkdcmlfehcbcfajbe/"]
 }

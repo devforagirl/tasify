@@ -1,7 +1,4 @@
-// -- Stdio Bridge ï¿½ Chrome Native Messaging Protocol --
-//
-// Sends/receives messages over process.stdin/stdout using
-// the [4-byte length][JSON] framing protocol.
+// -- Stdio Bridge — Chrome Native Messaging Protocol --
 
 import { encodeMessage, decodeMessages } from "./utils/buffer-helper.js";
 import { logger } from "./logger.js";
@@ -14,14 +11,12 @@ class StdioBridge {
     this._onClose = null;
   }
 
-  /**
-   * Start listening on stdin.
-   * @param {function} onMessage ï¿½ called with parsed message objects
-   * @param {function} [onClose] ï¿½ called when stdin closes (browser disconnected)
-   */
   start(onMessage, onClose) {
     this._handler = onMessage;
-    this._onClose = onClose || (() => process.exit(0));
+    // Don't auto-exit on stdin close — let keepalive manage lifecycle
+    this._onClose = onClose || (() => {
+      logger.info("stdin closed (default handler — staying alive)");
+    });
     this._running = true;
 
     process.stdin.on("data", (chunk) => {
@@ -29,7 +24,6 @@ class StdioBridge {
       const { messages, remainder } = decodeMessages(this._buffer);
       this._buffer = remainder;
       for (const msg of messages) {
-        logger.debug("stdin message received", { type: msg.type });
         try {
           this._handler(msg);
         } catch (err) {
@@ -39,32 +33,25 @@ class StdioBridge {
     });
 
     process.stdin.on("end", () => {
-      logger.info("stdin closed ï¿½ browser disconnected");
+      logger.info("stdin closed");
       this._running = false;
       if (this._onClose) this._onClose();
     });
 
     process.stdin.on("error", (err) => {
       logger.error("stdin error", { error: err.message });
-      this._running = false;
-      if (this._onClose) this._onClose();
     });
   }
 
-  /**
-   * Send a message to the browser via stdout.
-   * @param {object} msg
-   */
   send(msg) {
     if (!this._running) {
-      logger.warn("cannot send ï¿½ bridge not running");
+      logger.warn("cannot send — bridge not running");
       return;
     }
     const buf = encodeMessage(msg);
     process.stdout.write(buf);
   }
 
-  /** Gracefully stop */
   stop() {
     this._running = false;
     process.stdin.removeAllListeners();

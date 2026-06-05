@@ -1,15 +1,10 @@
-// -- Shell Executor ï¿½ CLI Wrapper --
+// -- Shell Executor — CLI Wrapper --
 // Spawns claude-code processes and pipes output back via StdioBridge.
 
 import { spawn } from "node:child_process";
 import { logger } from "./logger.js";
 
 class ShellExecutor {
-  /**
-   * @param {object} config
-   * @param {string} [config.cliPath] ï¿½ path to claude-code binary, defaults to "npx claude-code"
-   * @param {import("./stdio-bridge.js").default} config.bridge
-   */
   constructor({ cliPath = "npx claude-code", bridge }) {
     this._cliPath = cliPath;
     this._bridge = bridge;
@@ -17,18 +12,8 @@ class ShellExecutor {
     this._abortController = null;
   }
 
-  /**
-   * Execute a command against the claude-code CLI.
-   * Results are streamed back via the bridge.
-   *
-   * @param {string} action ï¿½ subcommand or flag (e.g. "stop", "--version")
-   * @param {object} [params={}]
-   *   Special `_` key provides positional args (used for test compat).
-   * @returns {Promise<{ exitCode: number | null, signal: string | null }>}
-   */
   execute(action, params = {}) {
     return new Promise((resolve) => {
-      // Build the command string
       const parts = [this._cliPath];
       if (action) parts.push(action);
       if (Array.isArray(params._)) parts.push(...params._);
@@ -89,13 +74,7 @@ class ShellExecutor {
         logger.info("process closed", { exitCode, signal });
         this._bridge.send({
           type: "CLAUDE_RESULT",
-          data: {
-            action,
-            exitCode,
-            signal,
-            stdout: stdout.trim(),
-            stderr: stderr.trim(),
-          },
+          data: { action, exitCode, signal, stdout: stdout.trim(), stderr: stderr.trim() },
         });
         this._child = null;
         this._abortController = null;
@@ -104,7 +83,6 @@ class ShellExecutor {
     });
   }
 
-  /** Kill the currently running child process (if any). */
   kill() {
     if (this._abortController) {
       this._abortController.abort();
@@ -115,10 +93,7 @@ class ShellExecutor {
     }
   }
 
-  /** Check if a child process is currently running */
-  get isRunning() {
-    return this._child !== null;
-  }
+  get isRunning() { return this._child !== null; }
 }
 
 export default ShellExecutor;

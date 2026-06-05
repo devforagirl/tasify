@@ -16,7 +16,6 @@ export function useClaudeDashboard() {
 
     store.setConnectionStatus("connecting");
 
-    // Listen for events from transport
     const unsubEvent = service.onEvent((msg: unknown) => {
       const m = msg as Record<string, unknown>;
       const data = (m.data || m.payload || {}) as Record<string, unknown>;
@@ -28,14 +27,12 @@ export function useClaudeDashboard() {
         details?: Record<string, unknown>;
       };
 
-      // STATE_SNAPSHOT — bulk update
       if (m.type === "STATE_SNAPSHOT") {
         const snap = m.payload as Record<string, unknown> || {};
         if (snap.status) store.setConnectionStatus(String(snap.status));
         return;
       }
 
-      // STATUS_CHANGE
       if (m.type === "STATUS_CHANGE") {
         const payload = m.payload as Record<string, unknown> || {};
         const newStatus = payload.status as string;
@@ -48,7 +45,6 @@ export function useClaudeDashboard() {
         return;
       }
 
-      // CLAUDE_EVENT — push to event log and derive status
       if (m.type === "CLAUDE_EVENT" || m.type === "CLAUDE_OUTPUT" || m.type === "CLAUDE_RESULT" || m.type === "CLAUDE_ERROR") {
         const logEvent = {
           id: String(Date.now()),
@@ -60,7 +56,6 @@ export function useClaudeDashboard() {
         };
         store.addEvent(logEvent);
 
-        // Derive status changes
         if (m.type === "CLAUDE_ERROR") {
           store.setStatus(STATUS.ERROR);
           const errMsg = (data.message as string) || "An error occurred";
@@ -72,7 +67,6 @@ export function useClaudeDashboard() {
           }
         }
 
-        // Add metric
         store.addMetricPoint({
           timestamp: Date.now(),
           value: Math.random() * 100,
@@ -81,9 +75,19 @@ export function useClaudeDashboard() {
       }
     });
 
+    // Fix: properly unwrap STATUS_CHANGE payload
     const unsubState = service.onStateChange((state: unknown) => {
       const s = state as Record<string, unknown>;
-      if (s.status) store.setStatus(s.status as Status);
+      // Direct status field (e.g. { status: "connected" })
+      if (s.status) {
+        store.setStatus(s.status as Status);
+        return;
+      }
+      // Nested payload (e.g. { type: "STATUS_CHANGE", payload: { status: "connected" } })
+      const payload = (s.payload || {}) as Record<string, unknown>;
+      if (payload.status) {
+        store.setConnectionStatus(String(payload.status));
+      }
     });
 
     return () => {
@@ -94,13 +98,6 @@ export function useClaudeDashboard() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Map connectionStatus to the old-style status for mock compat
-  const extStatus = store.connectionStatus as string;
-  let realStatus = store.status;
-  if (extStatus === "DISCONNECTED" || extStatus === "HOST_NOT_FOUND" || extStatus === "CONNECTING") {
-    // Use the connection status as the display status when disconnected
-  }
 
   return {
     status: store.status,

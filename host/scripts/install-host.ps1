@@ -1,97 +1,57 @@
-# Tasify Native Host — Windows Installation Script
-# Run this script as Administrator to register the Native Messaging Host.
+# Tasify Native Host � Windows Installation Script
 
 param(
-  [Parameter(Mandatory = $false)]
   [string]$HostDir = "",
-  [Parameter(Mandatory = $false)]
   [string]$ExtensionId = "",
   [switch]$Uninstall
 )
 
 $ErrorActionPreference = "Stop"
-
 $HOST_NAME = "com.tasify.claude.host"
-$MANIFEST_FILE = "manifest.json"
 
-# Resolve paths
-if (-not $HostDir) {
-  $HostDir = Split-Path -Parent $PSScriptRoot
-}
+if (-not $HostDir) { $HostDir = Split-Path -Parent $PSScriptRoot }
 $HostDir = Resolve-Path $HostDir
-
-$manifestPath = Join-Path $HostDir $MANIFEST_FILE
-$hostEntryPoint = Join-Path $HostDir "src\index.js"
-
-if (-not (Test-Path $manifestPath)) {
-  Write-Error "manifest.json not found at: $manifestPath"
-  exit 1
-}
-
-if (-not (Test-Path $hostEntryPoint)) {
-  Write-Error "Host entry point not found at: $hostEntryPoint"
-  exit 1
-}
 
 function Install-Host {
   Write-Host "=== Tasify Native Host Installation ===" -ForegroundColor Cyan
-  Write-Host "Host directory: $HostDir"
-  Write-Host ""
+  Write-Host "Host directory: $HostDir`n"
 
-  # 1. Prepare manifest with absolute path and optionally extension ID
-  $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
-  $manifest.path = $hostEntryPoint
-
-  if ($ExtensionId) {
-    $manifest.allowed_origins = @("chrome-extension://$ExtensionId/")
-  }
-
-  $finalManifest = $manifest | ConvertTo-Json -Depth 4
-
-  # 2. Write manifest to a location Chrome can find
+  $launcherPath = (Join-Path $HostDir "scripts\run-host.bat") -replace '\\', '\\'
   $manifestDest = Join-Path $HostDir "com.tasify.claude.host.json"
-  $finalManifest | Set-Content -Path $manifestDest -Encoding UTF8 -Force
-  Write-Host "Manifest written to: $manifestDest" -ForegroundColor Green
-  Write-Host "  $finalManifest"
 
-  # 3. Register in Windows Registry
+  $extId = if ($ExtensionId) { $ExtensionId } else { "PLACEHOLDER" }
+
+  # Build JSON manually to avoid ConvertTo-Json single-element array bug in PS 5.1
+  $json = @"
+{
+  "name": "com.tasify.claude.host",
+  "description": "Tasify Claude Code Bridge",
+  "path": "$launcherPath",
+  "type": "stdio",
+  "allowed_origins": ["chrome-extension://$extId/"]
+}
+"@
+  $json | Set-Content $manifestDest -Encoding UTF8 -Force
+
+  Write-Host "Manifest written to: $manifestDest"
+  Write-Host "  Launcher: $launcherPath"
+  Write-Host "  Allowed origins: chrome-extension://$extId/"
+
   $regPath = "HKCU:\Software\Google\Chrome\NativeMessagingHosts\$HOST_NAME"
-  if (-not (Test-Path $regPath)) {
-    New-Item -Path $regPath -Force | Out-Null
-  }
+  if (-not (Test-Path $regPath)) { New-Item -Path $regPath -Force | Out-Null }
   Set-ItemProperty -Path $regPath -Name "(default)" -Value $manifestDest
-  Write-Host "Registry key created: $regPath -> $manifestDest" -ForegroundColor Green
-
+  Write-Host "Registry key: $regPath"
   Write-Host ""
-  Write-Host "Installation complete! Chrome will find the Tasify Native Host." -ForegroundColor Green
-  Write-Host "To test: start the host manually with 'node src/index.js' from the host directory," -ForegroundColor Yellow
-  Write-Host "then trigger a hook with: curl -X POST http://localhost:3000/hooks ..." -ForegroundColor Yellow
+  Write-Host "Installation complete!" -ForegroundColor Green
 }
 
 function Uninstall-Host {
   Write-Host "=== Tasify Native Host Uninstall ===" -ForegroundColor Yellow
-
   $regPath = "HKCU:\Software\Google\Chrome\NativeMessagingHosts\$HOST_NAME"
-  if (Test-Path $regPath) {
-    Remove-Item -Path $regPath -Force
-    Write-Host "Registry key removed: $regPath" -ForegroundColor Green
-  } else {
-    Write-Host "Registry key not found." -ForegroundColor Gray
-  }
-
+  if (Test-Path $regPath) { Remove-Item -Path $regPath -Force; Write-Host "Registry removed" }
   $manifestDest = Join-Path $HostDir "com.tasify.claude.host.json"
-  if (Test-Path $manifestDest) {
-    Remove-Item -Path $manifestDest -Force
-    Write-Host "Manifest file removed: $manifestDest" -ForegroundColor Green
-  }
-
+  if (Test-Path $manifestDest) { Remove-Item $manifestDest -Force; Write-Host "Manifest removed" }
   Write-Host "Uninstall complete." -ForegroundColor Green
 }
 
-# ── Main ──
-
-if ($Uninstall) {
-  Uninstall-Host
-} else {
-  Install-Host
-}
+if ($Uninstall) { Uninstall-Host } else { Install-Host }

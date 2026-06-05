@@ -1,11 +1,11 @@
 // -- ChromeRuntimeTransport --
 // Implements the same interface as WebSocketTransport,
 // but communicates with the Background SW via chrome.runtime.
-//
-// This is the only file that needs to change when switching
-// between Web (Phase 1) and Extension (Phase 3).
 
 type MessageHandler = (msg: unknown) => void;
+
+const STATE_EVENT_TYPES = new Set(["STATE_SNAPSHOT", "STATUS_CHANGE"]);
+const CLAUDE_EVENT_TYPES = new Set(["CLAUDE_EVENT", "CLAUDE_ERROR", "CLAUDE_OUTPUT", "CLAUDE_RESULT"]);
 
 class ChromeRuntimeTransport {
   private port: chrome.runtime.Port | null = null;
@@ -18,22 +18,23 @@ class ChromeRuntimeTransport {
 
       this.port.onMessage.addListener((msg: unknown) => {
         const m = msg as Record<string, unknown>;
-        const type = (m.type as string) || "CLAUDE_EVENT";
+        const type = (m.type as string) || "";
 
-        // Dispatch to type-specific handlers
-        const handlers = this.listeners.get(type);
-        if (handlers) {
-          for (const fn of handlers) fn(msg);
+        // Dispatch to type-specific handlers (e.g. on("CLAUDE_EVENT", ...))
+        const typeHandlers = this.listeners.get(type);
+        if (typeHandlers) {
+          for (const fn of typeHandlers) fn(msg);
         }
 
-        // Also dispatch to generic CLAUDE_EVENT / STATE_CHANGE handlers
-        if (type === "STATE_SNAPSHOT" || type === "STATUS_CHANGE") {
+        // Also dispatch to broad-category handlers
+        if (STATE_EVENT_TYPES.has(type)) {
           const stateHandlers = this.listeners.get("STATE_CHANGE");
           if (stateHandlers) {
             for (const fn of stateHandlers) fn(msg);
           }
         }
-        if (type === "CLAUDE_EVENT" || type === "CLAUDE_ERROR" || type === "CLAUDE_OUTPUT" || type === "CLAUDE_RESULT") {
+        if (CLAUDE_EVENT_TYPES.has(type) && type !== "CLAUDE_EVENT") {
+          // Only dispatch non-duplicate types to CLAUDE_EVENT handler
           const eventHandlers = this.listeners.get("CLAUDE_EVENT");
           if (eventHandlers) {
             for (const fn of eventHandlers) fn(msg);
@@ -43,12 +44,10 @@ class ChromeRuntimeTransport {
 
       this.port.onDisconnect.addListener(() => {
         this._connected = false;
-        console.warn("[ChromeRuntimeTransport] disconnected from Background");
       });
 
       this._connected = true;
-    } catch (err) {
-      console.error("[ChromeRuntimeTransport] connect failed:", err);
+    } catch {
       this._connected = false;
     }
   }
@@ -80,7 +79,7 @@ class ChromeRuntimeTransport {
     if (this.port) {
       this.port.postMessage(msg);
     } else {
-      console.warn("[ChromeRuntimeTransport] cannot send — not connected");
+      console.warn("[ChromeRuntimeTransport] cannot send - not connected");
     }
   }
 
