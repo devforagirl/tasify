@@ -57,7 +57,7 @@ function generateEvent() {
       severity: template.severity,
       details: {
         task_name: randomItem(TASK_NAMES),
-        message: `${template.event_name} — simulated event`,
+        message: `${template.event_name} ï¿½ simulated event`,
         duration: `${(Math.random() * 30 + 1).toFixed(1)}s`,
       },
     },

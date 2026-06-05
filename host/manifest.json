@@ -1,0 +1,7 @@
+{
+  "name": "com.tasify.claude.host",
+  "description": "Tasify Claude Code Bridge - forwards Claude Code Hooks to Chrome Extension",
+  "path": "REPLACE_WITH_ABSOLUTE_PATH_TO_HOST",
+  "type": "stdio",
+  "allowed_origins": ["chrome-extension://REPLACE_WITH_EXTENSION_ID/"]
+}

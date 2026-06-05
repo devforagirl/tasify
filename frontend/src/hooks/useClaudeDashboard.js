@@ -108,7 +108,7 @@ export function useClaudeDashboard() {
           severity: ev.severity,
           details: {
             task_name: randomItem(TASK_NAMES),
-            message: `${ev.event_name} — event #${eventCounter}`,
+            message: `${ev.event_name} ï¿½ event #${eventCounter}`,
           },
         },
       };

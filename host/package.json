@@ -1,0 +1,19 @@
+{
+  "name": "tasify-native-host",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Tasify Native Messaging Host - bridges Claude Code Hooks and Chrome Extension via Stdio",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --experimental-vm-modules node_modules/.bin/vitest run",
+    "test:watch": "node --experimental-vm-modules node_modules/.bin/vitest"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.0"
+  }
+}

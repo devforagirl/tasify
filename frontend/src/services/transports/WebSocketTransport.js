@@ -59,7 +59,7 @@ class WebSocketTransport {
     if (this.socket?.connected) {
       this.socket.emit('COMMAND', command);
     } else {
-      console.warn('[WebSocketTransport] cannot send — not connected');
+      console.warn('[WebSocketTransport] cannot send ï¿½ not connected');
     }
   }
 

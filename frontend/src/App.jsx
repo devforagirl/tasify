@@ -66,7 +66,7 @@ function App() {
 
       {/* Footer */}
       <footer className="border-t border-claude-border px-6 py-3 text-[10px] text-gray-600 flex items-center justify-between">
-        <span>Tasify v1.0.0 — Phase 1 Web Mock</span>
+        <span>Tasify v1.0.0 ï¿½ Phase 1 Web Mock</span>
         <span>Built with React + Socket.io</span>
       </footer>
     </div>

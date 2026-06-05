@@ -1,4 +1,4 @@
-# Tasify — Data Contract / API Schema
+# Tasify ï¿½ Data Contract / API Schema
 
 > Phase 1: Mock Server over WebSocket (Socket.io)
 > Phase 3: Chrome Runtime Messages (same schema)
@@ -103,4 +103,4 @@
 
 - **Phase 1 (Web Mock):** Socket.io over WebSocket. Events are namespaced as Socket.io event names (`CLAUDE_EVENT`, `STATE_CHANGE`, `COMMAND`).
 - **Phase 3 (Chrome Extension):** Same JSON schema transmitted via `chrome.runtime.sendMessage` / `chrome.runtime.connect`. The `Transport` adapter class abstracts the difference.
-- UI components **never** reference Socket.io or Chrome APIs directly — they consume events through `ClaudeService` only.
+- UI components **never** reference Socket.io or Chrome APIs directly ï¿½ they consume events through `ClaudeService` only.
