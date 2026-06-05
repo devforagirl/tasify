@@ -8,7 +8,7 @@ describe("buffer-helper", () => {
 
     // First 4 bytes = length of JSON
     const json = JSON.stringify(msg);
-    const length = buf.readUInt32BE(0);
+    const length = buf.readUInt32LE(0);
     expect(length).toBe(Buffer.byteLength(json));
 
     // Remaining bytes = JSON string
@@ -83,7 +83,7 @@ describe("buffer-helper", () => {
   it("should skip malformed JSON gracefully", () => {
     // Manually craft a buffer with invalid JSON
     const buf = Buffer.alloc(4 + 5);
-    buf.writeUInt32BE(5, 0);
+    buf.writeUInt32LE(5, 0);
     buf.write("{:bad", 4, 5, "utf-8");
     // Also append a valid message after it so we can still parse
     const validMsg = { ok: true };

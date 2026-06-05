@@ -1,6 +1,7 @@
-// -- Stdio Bridge — Chrome Native Messaging Protocol --
+// -- Stdio Bridge -- Chrome Native Messaging Protocol --
 
 import { encodeMessage, decodeMessages } from "./utils/buffer-helper.js";
+import fs from "fs";
 import { logger } from "./logger.js";
 
 class StdioBridge {
@@ -13,9 +14,9 @@ class StdioBridge {
 
   start(onMessage, onClose) {
     this._handler = onMessage;
-    // Don't auto-exit on stdin close — let keepalive manage lifecycle
     this._onClose = onClose || (() => {
-      logger.info("stdin closed (default handler — staying alive)");
+      logger.info("stdin closed - Chrome disconnected, exiting");
+      process.exit(0);
     });
     this._running = true;
 
@@ -24,32 +25,32 @@ class StdioBridge {
       const { messages, remainder } = decodeMessages(this._buffer);
       this._buffer = remainder;
       for (const msg of messages) {
-        try {
-          this._handler(msg);
-        } catch (err) {
-          logger.error("message handler error", { error: err.message });
+        try { this._handler(msg); } catch (err) {
+          logger.error("handler error", { error: err.message });
         }
       }
     });
 
     process.stdin.on("end", () => {
-      logger.info("stdin closed");
+      logger.info("stdin end event");
       this._running = false;
       if (this._onClose) this._onClose();
     });
 
     process.stdin.on("error", (err) => {
       logger.error("stdin error", { error: err.message });
+      this._running = false;
+      if (this._onClose) this._onClose();
     });
   }
 
   send(msg) {
     if (!this._running) {
-      logger.warn("cannot send — bridge not running");
+      logger.warn("cannot send - bridge not running");
       return;
     }
     const buf = encodeMessage(msg);
-    process.stdout.write(buf);
+    fs.writeSync(1, buf);
   }
 
   stop() {
