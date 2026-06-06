@@ -1,4 +1,4 @@
-﻿# Tasify — 从零开始的验证步骤指南
+# Tasify — 从零开始的验证步骤指南
 
 > 前提：已安装 Node.js (v18+) 和 Chrome 浏览器。
 > 如果你开启了代理（如 127.0.0.1:30008），仅在 npm install 远程依赖时需要。本地运行服务不需要。
@@ -9,7 +9,7 @@
 
 ```powershell
 # 检查 3000 端口是否被占用（Native Host 默认端口）
-netstat -ano | Select-String ":3000" | Select-String "LISTEN"
+netstat -ano | Select-String ":28934" | Select-String "LISTEN"
 
 # 如果有 node 进程占用，查看详情
 wmic process where "name='node.exe'" get processid,commandline
@@ -47,7 +47,7 @@ node src/index.js
 
 正常输出：
 ```
-{"t":"...","level":"INF","msg":"HTTP listener started","data":{"port":3000}}
+{"t":"...","level":"INF","msg":"HTTP listener started","data":{"port":28934}}
 {"t":"...","level":"INF","msg":"Tasify Native Host started","data":{...}}
 ```
 
@@ -63,7 +63,7 @@ node src/index.js
 新开一个终端，执行：
 
 ```powershell
-curl.exe http://localhost:3000/api/health
+curl.exe http://localhost:28934/api/health
 ```
 
 期望结果：`{"status":"ok","uptime":<秒数>}`
@@ -71,7 +71,7 @@ curl.exe http://localhost:3000/api/health
 ### 3.3 HTTP -> Stdio（模拟 Claude Code 发 Hook）
 
 ```powershell
-curl.exe -X POST http://localhost:3000/hooks ^
+curl.exe -X POST http://localhost:28934/hooks ^
   -H "Content-Type: application/json" ^
   -d "{\"event\":\"on_task_completed\",\"payload\":{\"task_id\":\"t-1\",\"status\":\"success\"}}"
 ```
@@ -237,7 +237,7 @@ powershell -ExecutionPolicy Bypass -File scripts/install-host.ps1
 |------|----------|----------|
 | Popup 显示 **"Host Not Found"** | Extension ID 不匹配或 Native Host 未注册 | 确认已运行 install-host.ps1；检查 manifest.json 中的 allowed_origins 是否包含真实 Extension ID |
 | connectNative 报错 | 注册表路径不对 | 检查 HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.tasify.claude.host 是否存在，其默认值指向的 JSON 文件是否存在 |
-| **端口 3000 被占用** | 之前启动的 Host 没关闭，变成了孤儿进程 | `wmic process where "name='node.exe'" get processid,commandline` 查看，然后 `Stop-Process -Id <PID> -Force` |
+| **端口 28934 被占用** | 之前启动的 Host 没关闭，变成了孤儿进程 | `wmic process where "name='node.exe'" get processid,commandline` 查看，然后 `Stop-Process -Id <PID> -Force` |
 | **Host 关闭后 Popup 一直不更新** | Background SW 在 3 秒重连周期内 | 等待最多 3 秒即可自动更新状态 |
 | **构建报错** | 依赖问题 | 确认 npm install 已成功执行 |
 | npm 安装报 **EPERM** | npm 缓存锁 | `Remove-Item -Recurse -Force "$env:LOCALAPPDATA\npm-cache\_cacache\tmp\"` 后重试 |
@@ -269,7 +269,7 @@ Chrome Native Messaging ??? x86 Windows ??? **???(Little-Endian)** ?? 4 ????????
 
 ```powershell
 # ?????????:??????? Host
-Invoke-WebRequest -Uri http://localhost:3000/hooks -Method POST -ContentType "application/json" `
+Invoke-WebRequest -Uri http://localhost:28934/hooks -Method POST -ContentType "application/json" `
   -Body '{"hook_event_name":"on_test","payload":{"message":"hello"}}'
 ```
 
@@ -288,13 +288,13 @@ nativePort.onDisconnect - Error when communicating with the native messaging hos
 
 ```powershell
 # 1. ?????? 3000 ???
-netstat -ano | Select-String ":3000" | Select-String "LISTEN"
+netstat -ano | Select-String ":28934" | Select-String "LISTEN"
 
 # 2. ????(?? <PID> ????? ID)
 taskkill /F /PID <PID>
 
 # 3. ???????
-netstat -ano | Select-String ":3000"
+netstat -ano | Select-String ":28934"
 
 # 4. ? chrome://extensions ??? Tasify
 # 5. ?? Popup ???? "Connected"

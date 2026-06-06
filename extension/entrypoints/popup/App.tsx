@@ -15,8 +15,8 @@ function App() {
     connectionStatus,
     error,
     stopTask,
-    refreshState,
-    triggerMockHook,
+    connectHost,
+    disconnectHost,
     isConnected,
   } = useClaudeDashboard();
 
@@ -47,9 +47,8 @@ function App() {
         <div className="grid grid-cols-3 gap-2">
           <TaskDetailCard task={currentTask} />
           <ControlPanel
-            onStop={stopTask}
-            onSync={refreshState}
-            onTriggerMock={triggerMockHook}
+            onStart={connectHost}
+            onStop={disconnectHost}
             isConnected={isConnected}
           />
           <DataVisualization metrics={metrics} />

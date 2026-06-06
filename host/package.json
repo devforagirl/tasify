@@ -1,11 +1,20 @@
 {
-  "name": "tasify-native-host",
-  "private": true,
+  "name": "@tasify/host",
   "version": "1.0.0",
   "type": "module",
-  "description": "Tasify Native Messaging Host - bridges Claude Code Hooks and Chrome Extension via Stdio",
+  "description": "Tasify Native Messaging Host - bridges Claude Code Hooks and Chrome Extension",
+  "bin": {
+    "tasify-host": "./scripts/run-host.bat"
+  },
+  "files": [
+    "src/",
+    "scripts/",
+    "package.json"
+  ],
   "scripts": {
     "start": "node src/index.js",
+    "postinstall": "node scripts/postinstall.js",
+    "preuninstall": "node scripts/uninstall.js",
     "test": "node --experimental-vm-modules node_modules/.bin/vitest run",
     "test:watch": "node --experimental-vm-modules node_modules/.bin/vitest"
   },
@@ -17,3 +26,4 @@
     "vitest": "^2.1.0"
   }
 }
+

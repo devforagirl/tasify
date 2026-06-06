@@ -39,7 +39,7 @@ export function useClaudeDashboard() {
         if (newStatus) {
           store.setConnectionStatus(newStatus);
           if (newStatus === "HOST_NOT_FOUND") {
-            store.setError("Native Host not found. Please install the Tasify host.");
+            store.setError("Host not installed. Run: npm install -g @tasify/host");
           }
         }
         return;
@@ -75,15 +75,12 @@ export function useClaudeDashboard() {
       }
     });
 
-    // Fix: properly unwrap STATUS_CHANGE payload
     const unsubState = service.onStateChange((state: unknown) => {
       const s = state as Record<string, unknown>;
-      // Direct status field (e.g. { status: "connected" })
       if (s.status) {
         store.setStatus(s.status as Status);
         return;
       }
-      // Nested payload (e.g. { type: "STATUS_CHANGE", payload: { status: "connected" } })
       const payload = (s.payload || {}) as Record<string, unknown>;
       if (payload.status) {
         store.setConnectionStatus(String(payload.status));
@@ -109,8 +106,8 @@ export function useClaudeDashboard() {
     sendCommand: (actionType: string, params?: Record<string, unknown>) =>
       serviceRef.current?.sendCommand(actionType, params),
     stopTask: () => serviceRef.current?.stopTask(),
-    refreshState: () => serviceRef.current?.refreshState(),
-    triggerMockHook: (name?: string) => serviceRef.current?.triggerMockHook(name),
+    connectHost: () => serviceRef.current?.connectHost(),
+    disconnectHost: () => serviceRef.current?.disconnectHost(),
     isConnected: store.connectionStatus === "connected",
   };
 }

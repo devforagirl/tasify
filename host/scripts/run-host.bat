@@ -1,1 +1,1 @@
-@"D:\Program Files\nodejs\node.exe" "%~dp0..\src\index.js"
+@node "%~dp0..\src\index.js"

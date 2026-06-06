@@ -1,4 +1,4 @@
-﻿# Claude Code + Tasify 全链路配置指南
+# Claude Code + Tasify 全链路配置指南
 
 ## 前置确认
 
@@ -55,7 +55,7 @@ node src/index.js
 看到以下输出表示启动成功：
 
 `
-[tasify] HTTP listener ready on port 3000
+[tasify] HTTP listener ready on port 28934
 [tasify] ready
 `
 
@@ -100,7 +100,7 @@ What is this project about?
 |------|------|----------|
 | Popup 显示 "Disconnected" | Native Host 没有运行 | cd host && node src/index.js 启动 |
 | 没有看到任何事件 | Claude Code 和 Tasify 不在同一目录 | 确认 claude 在 D:\GitHub\Tasify 下运行 |
-| Claude Code 报连接被拒绝 | 3000 端口被占用 | netstat -ano 查看并释放端口 |
+| Claude Code 报连接被拒绝 | 28934 端口被占用 | netstat -ano 查看并释放端口 |
 | 切换到其他目录了 | Hook 配置只在 .claude/ 所在目录生效 | 每次都在 D:\GitHub\Tasify 运行 claude |
 
 ---

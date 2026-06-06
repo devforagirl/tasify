@@ -81,12 +81,12 @@ class ClaudeService {
     this.sendCommand("STOP_TASK", { target_id: "current" });
   }
 
-  refreshState(): void {
-    this.sendCommand("SYNC_STATE");
+  connectHost(): void {
+    this.transport?.send({ type: "CONNECT_HOST" });
   }
 
-  triggerMockHook(eventName = "custom_event"): void {
-    this.sendCommand("TRIGGER_MOCK_HOOK", { event_name: eventName });
+  disconnectHost(): void {
+    this.transport?.send({ type: "DISCONNECT_HOST" });
   }
 
   destroy(): void {
