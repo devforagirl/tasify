@@ -1,10 +1,10 @@
 {
   "name": "@tasify/host",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "type": "module",
   "description": "Tasify Native Messaging Host - bridges Claude Code Hooks and Chrome Extension",
   "bin": {
-    "tasify-host": "./scripts/run-host.bat"
+    "tasify-host": "scripts/run-host.js"
   },
   "files": [
     "src/",
@@ -26,4 +26,3 @@
     "vitest": "^2.1.0"
   }
 }
-
