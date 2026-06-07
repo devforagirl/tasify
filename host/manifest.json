@@ -3,5 +3,7 @@
   "description": "Tasify Claude Code Bridge",
   "path": "scripts/run-host.bat",
   "type": "stdio",
-  "allowed_origins": ["chrome-extension://jnheoacefagphgahkdcmlfehcbcfajbe/"]
+  "allowed_origins": [
+    "chrome-extension://jnheoacefagphgahkdcmlfehcbcfajbe/"
+  ]
 }
