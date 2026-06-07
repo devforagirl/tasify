@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+﻿import { useEffect, useRef } from "react";
 import useClaudeStore, { STATUS, type Status } from "../store/useClaudeStore";
 import ClaudeService from "./ClaudeService";
 import ChromeRuntimeTransport from "./ChromeRuntimeTransport";
@@ -66,12 +66,6 @@ export function useClaudeDashboard() {
             store.setStatus(STATUS.IDLE);
           }
         }
-
-        store.addMetricPoint({
-          timestamp: Date.now(),
-          value: Math.random() * 100,
-          label: String(data.event || m.type),
-        });
       }
     });
 
@@ -98,9 +92,7 @@ export function useClaudeDashboard() {
 
   return {
     status: store.status,
-    currentTask: store.currentTask,
     events: store.events,
-    metrics: store.metrics,
     connectionStatus: store.connectionStatus,
     error: store.error,
     sendCommand: (actionType: string, params?: Record<string, unknown>) =>
