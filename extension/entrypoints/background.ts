@@ -107,7 +107,7 @@ export default defineBackground(() => {
   }
 
   chrome.notifications.onClosed.addListener((notificationId, byUser) => {
-    if (!byUser || !notificationId.startsWith("tasify-permission-")) {
+    if (!notificationId.startsWith("tasify-permission-")) {
       return;
     }
 
@@ -120,7 +120,7 @@ export default defineBackground(() => {
       nativePort.postMessage({
         type: "PERMISSION_DECISION",
         correlationId,
-        decision: { behavior: "deny", message: "Dismissed by user" },
+        decision: { behavior: "deny", message: byUser ? "Dismissed by user" : "Timed out" },
       });
     }
 
