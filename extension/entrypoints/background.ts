@@ -115,15 +115,6 @@ export default defineBackground(() => {
     const idx = pendingQueue.findIndex((p) => p.correlationId === correlationId);
     if (idx !== -1) pendingQueue.splice(idx, 1);
     currentPermissionNotifId = null;
-
-    if (nativePort) {
-      nativePort.postMessage({
-        type: "PERMISSION_DECISION",
-        correlationId,
-        decision: { behavior: "deny", message: byUser ? "Dismissed by user" : "Timed out" },
-      });
-    }
-
     showNextPermission();
     broadcastPendingPermissions();
   });
