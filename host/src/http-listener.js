@@ -60,6 +60,17 @@ class HttpListener {
             });
           }, PERMISSION_TIMEOUT_MS);
           this._pendingRes.set(correlationId, { res, timer });
+          req.on("close", () => {
+            if (this._pendingRes.has(correlationId)) {
+              this._bridge.send({
+                type: "PERMISSION_RESOLVED",
+                data: { correlationId, decision: { behavior: "deny", message: "Connection closed" } },
+              });
+              clearTimeout(timer);
+              this._pendingRes.delete(correlationId);
+              process.stderr.write("[tasify] PermissionRequest aborted - client disconnected, correlationId=" + correlationId + "\n");
+            }
+          });
           try {
             this._bridge.send({
               type: "CLAUDE_EVENT",
