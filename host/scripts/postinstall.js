@@ -75,6 +75,11 @@ const HOOKS_CONFIG = {
         hooks: [{ type: "http", url: HOOKS_URL, timeout: 10 }],
       },
     ],
+    PermissionRequest: [
+      {
+        hooks: [{ type: "http", url: HOOKS_URL, timeout: 86400 }],
+      },
+    ],
     Stop: [
       {
         hooks: [{ type: "http", url: HOOKS_URL, timeout: 10 }],

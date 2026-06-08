@@ -1,4 +1,4 @@
-﻿import { defineBackground } from "wxt/sandbox";
+import { defineBackground } from "wxt/sandbox";
 import { NOTIFY_EVENTS, DEFAULT_NOTIFY_PREFS, STORAGE_KEYS, type NotifyEventKey } from "./options/defaults";
 
 const NOTIFICATION_ICON = "/icons/48.png";
@@ -54,7 +54,7 @@ function makeNotificationMessage(msg: Record<string, unknown>): string {
     return `Connection: ${String(payload.status || "changed")}`;
   }
 
-  // CLAUDE_EVENT — extract details from payload
+  // CLAUDE_EVENT - extract details from payload
   const data = (msg.data || msg.payload || {}) as Record<string, unknown>;
   const payload = data.payload as Record<string, unknown> | undefined;
   const detail =
@@ -106,13 +106,43 @@ export default defineBackground(() => {
     );
   }
 
+  chrome.notifications.onClosed.addListener((notificationId, byUser) => {
+    if (!byUser || !notificationId.startsWith("tasify-permission-")) {
+      return;
+    }
+
+    const correlationId = notificationId.replace("tasify-permission-", "");
+    const idx = pendingQueue.findIndex((p) => p.correlationId === correlationId);
+    if (idx !== -1) pendingQueue.splice(idx, 1);
+    currentPermissionNotifId = null;
+
+    if (nativePort) {
+      nativePort.postMessage({
+        type: "PERMISSION_DECISION",
+        correlationId,
+        decision: { behavior: "deny", message: "Dismissed by user" },
+      });
+    }
+
+    showNextPermission();
+    broadcastPendingPermissions();
+  });
+
   chrome.notifications.onClicked.addListener((notificationId) => {
+    if (notificationId.startsWith("tasify-permission-")) {
+      chrome.action.openPopup();
+      return;
+    }
     if (notificationId.startsWith("tasify-")) {
       chrome.action.openPopup();
     }
   });
 
-  chrome.notifications.onButtonClicked.addListener((notificationId) => {
+  chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
+    if (notificationId.startsWith("tasify-permission-")) {
+      handlePermissionButton(notificationId, buttonIndex);
+      return;
+    }
     if (notificationId.startsWith("tasify-")) {
       chrome.tabs.create({ url: chrome.runtime.getURL("options.html") });
     }
@@ -128,12 +158,93 @@ export default defineBackground(() => {
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   let connectTimer: ReturnType<typeof setTimeout> | null = null;
   let latestState: Record<string, unknown> = { status: "DISCONNECTED" };
+  function buildPendingPermissionPayload() {
+    return pendingQueue.map((p) => ({
+      correlationId: p.correlationId,
+      toolUse: (p.payload.tool_use as string) || (p.payload.tool as string) || "Tool",
+      command: (p.payload.command as string) || "",
+      timestamp: p.timestamp,
+    }));
+  }
+
+  // --- PermissionRequest queue ---
+  interface PendingPermission {
+    correlationId: string;
+    payload: Record<string, unknown>;
+    timestamp: number;
+  }
+  const pendingQueue: PendingPermission[] = [];
+  let currentPermissionNotifId: string | null = null;
+
+  function broadcastPendingPermissions() {
+    broadcast({
+      type: "PENDING_PERMISSIONS",
+      payload: buildPendingPermissionPayload(),
+    });
+  }
 
   function broadcast(msg: Record<string, unknown>) {
     for (const port of popupPorts) {
       try { port.postMessage(msg); } catch { popupPorts.delete(port); }
     }
     tryNotify(msg);
+  }
+  function handlePermissionRequest(msg: Record<string, unknown>) {
+    const data = (msg.data || {}) as Record<string, unknown>;
+    const payload = (data.payload || {}) as Record<string, unknown>;
+    const correlationId = (data.correlationId as string) || "";
+    if (!correlationId) return;
+    pendingQueue.push({ correlationId, payload, timestamp: Date.now() });
+    if (currentPermissionNotifId === null) {
+      showNextPermission();
+    }
+
+    broadcastPendingPermissions();
+  }
+
+  function showNextPermission() {
+    if (pendingQueue.length === 0) {
+      currentPermissionNotifId = null;
+      return;
+    }
+    const item = pendingQueue[0];
+    const notifId = "tasify-permission-" + item.correlationId;
+    currentPermissionNotifId = notifId;
+    const payload = item.payload;
+    const toolUse = (payload.tool_use as string) || (payload.tool as string) || "Tool";
+    let detail = "";
+    if (payload.command) detail = String(payload.command).slice(0, 180);
+    else if (payload.content) detail = String(payload.content).slice(0, 180);
+    else if (payload.reason) detail = String(payload.reason).slice(0, 180);
+    else if (payload.prompt) detail = String(payload.prompt).slice(0, 180);
+    const message = toolUse + (detail ? ": " + detail : "");
+    chrome.notifications.create(notifId, {
+      type: "basic",
+      iconUrl: NOTIFICATION_ICON,
+      title: "Permission Request",
+      message: message.slice(0, 200),
+      buttons: [{ title: "Approve" }, { title: "Deny" }],
+    });
+  }
+
+  function handlePermissionButton(notifId: string, buttonIndex: number) {
+    const correlationId = notifId.replace("tasify-permission-", "");
+    const decision = buttonIndex === 0
+      ? { behavior: "allow" }
+      : { behavior: "deny", message: "Denied by user" };
+    const idx = pendingQueue.findIndex((p) => p.correlationId === correlationId);
+    if (idx !== -1) pendingQueue.splice(idx, 1);
+    currentPermissionNotifId = null;
+    if (nativePort) {
+      nativePort.postMessage({
+        type: "PERMISSION_DECISION",
+        correlationId,
+        decision,
+      });
+    }
+    chrome.notifications.clear(notifId);
+    showNextPermission();
+    broadcastPendingPermissions();
   }
 
   function scheduleReconnect() {
@@ -168,6 +279,14 @@ export default defineBackground(() => {
       const type = m.type as string;
       if (type === "CLAUDE_EVENT" || type === "CLAUDE_ERROR" || type === "CLAUDE_RESULT") {
         latestState = { ...latestState, ...m };
+      }
+      // Intercept PermissionRequest before broadcast
+      if (type === "CLAUDE_EVENT") {
+        const d = (m.data || {}) as Record<string, unknown>;
+        if (d.event === "PermissionRequest") {
+          handlePermissionRequest(m);
+          return;
+        }
       }
       broadcast(m);
     });
@@ -205,6 +324,13 @@ export default defineBackground(() => {
         }
         latestState = { ...latestState, status: "DISCONNECTED" };
         broadcast({ type: "STATUS_CHANGE", payload: { status: "DISCONNECTED" } });
+        return;
+      }
+      if (m.type === "GET_PENDING_PERMISSIONS") {
+        port.postMessage({
+          type: "PENDING_PERMISSIONS",
+          payload: buildPendingPermissionPayload(),
+        });
         return;
       }
 

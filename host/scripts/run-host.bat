@@ -1,1 +1,2 @@
-@node "%~dp0..\src\index.js"
+@echo off
+node "%~dp0..\src\index.js"
