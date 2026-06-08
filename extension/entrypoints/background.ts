@@ -288,6 +288,21 @@ export default defineBackground(() => {
           return;
         }
       }
+      // Listen for externally-resolved permissions (e.g. from langcli)
+      if (type === "PERMISSION_RESOLVED") {
+        const d = (m.data || {}) as Record<string, unknown>;
+        const correlationId = d.correlationId as string;
+        if (correlationId) {
+          const notifId = "tasify-permission-" + correlationId;
+          chrome.notifications.clear(notifId);
+          const idx = pendingQueue.findIndex((p) => p.correlationId === correlationId);
+          if (idx !== -1) pendingQueue.splice(idx, 1);
+          if (currentPermissionNotifId === notifId) currentPermissionNotifId = null;
+          showNextPermission();
+          broadcastPendingPermissions();
+        }
+        return;
+      }
       broadcast(m);
     });
 

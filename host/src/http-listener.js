@@ -129,6 +129,10 @@ class HttpListener {
     });
     this._pendingRes.delete(correlationId);
     process.stderr.write("[tasify] PermissionRequest resolved, correlationId=" + correlationId + " decision=" + JSON.stringify(decision) + "\n");
+    this._bridge.send({
+      type: "PERMISSION_RESOLVED",
+      data: { correlationId, decision },
+    });
   }
 
   stop() {
