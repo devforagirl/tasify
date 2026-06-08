@@ -224,6 +224,7 @@ export default defineBackground(() => {
       title: "Permission Request",
       message: message.slice(0, 200),
       buttons: [{ title: "Approve" }, { title: "Deny" }],
+      requireInteraction: true,
     });
   }
 
