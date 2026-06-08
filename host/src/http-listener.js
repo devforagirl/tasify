@@ -3,7 +3,7 @@ import cors from "cors";
 import { logger } from "./logger.js";
 import crypto from "crypto";
 
-const PERMISSION_TIMEOUT_MS = 300_000;
+const PERMISSION_TIMEOUT_MS = 86400_000;
 
 class HttpListener {
   constructor({ port, hookToken = null, bridge }) {
