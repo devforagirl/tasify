@@ -65,7 +65,11 @@ class HttpListener {
               type: "CLAUDE_EVENT",
               data: {
                 event: "PermissionRequest",
-                payload,
+                payload: {
+                  tool_name: hookEvent.tool_name || "",
+                  command: (hookEvent.tool_input && hookEvent.tool_input.command) || "",
+                  description: (hookEvent.tool_input && hookEvent.tool_input.description) || "",
+                },
                 correlationId,
                 timestamp: Date.now(),
               },

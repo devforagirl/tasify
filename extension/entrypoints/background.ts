@@ -152,7 +152,7 @@ export default defineBackground(() => {
   function buildPendingPermissionPayload() {
     return pendingQueue.map((p) => ({
       correlationId: p.correlationId,
-      toolUse: (p.payload.tool_use as string) || (p.payload.tool as string) || "Tool",
+      toolUse: (p.payload.tool_name as string) || "Tool",
       command: (p.payload.command as string) || "",
       timestamp: p.timestamp,
     }));
@@ -202,17 +202,12 @@ export default defineBackground(() => {
     const notifId = "tasify-permission-" + item.correlationId;
     currentPermissionNotifId = notifId;
     const payload = item.payload;
-    const toolUse = (payload.tool_use as string) || (payload.tool as string) || "Tool";
-    let detail = "";
-    if (payload.command) detail = String(payload.command).slice(0, 180);
-    else if (payload.content) detail = String(payload.content).slice(0, 180);
-    else if (payload.reason) detail = String(payload.reason).slice(0, 180);
-    else if (payload.prompt) detail = String(payload.prompt).slice(0, 180);
-    const message = toolUse + (detail ? ": " + detail : "");
+    const title = (payload.tool_name as string) || "Permission Request";
+    const message = (payload.command as string) || "tool pending approval";
     chrome.notifications.create(notifId, {
       type: "basic",
       iconUrl: NOTIFICATION_ICON,
-      title: "Permission Request",
+      title: title.slice(0, 50),
       message: message.slice(0, 200),
       buttons: [{ title: "Approve" }, { title: "Deny" }],
       requireInteraction: true,
