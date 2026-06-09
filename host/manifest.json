@@ -1,9 +1,0 @@
-{
-  "name": "com.tasify.claude.host",
-  "description": "Tasify Claude Code Bridge",
-  "path": "scripts/run-host.bat",
-  "type": "stdio",
-  "allowed_origins": [
-    "chrome-extension://jnheoacefagphgahkdcmlfehcbcfajbe/"
-  ]
-}
