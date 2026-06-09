@@ -8,7 +8,7 @@ HOST_NAME="com.tasify.claude.host"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PKG_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 LAUNCHER="$SCRIPT_DIR/run-host.sh"
-EXTENSION_ID="jnheoacefagphgahkdcmlfehcbcfajbe"
+EXTENSION_ID="lbknkjhpipbgoelflkfdncfnbbpdgmje"
 
 # Detect platform
 case "$(uname -s)" in

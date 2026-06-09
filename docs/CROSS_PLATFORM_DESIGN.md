@@ -162,7 +162,7 @@ await configureClaudeHooks();
      "description": "Tasify Native Messaging Host",
      "path": "<pkg-root>/scripts/run-host.sh",
      "type": "stdio",
-     "allowed_origins": ["chrome-extension://jnheoacefagphgahkdcmlfehcbcfajbe/"]
+     "allowed_origins": ["chrome-extension://lbknkjhpipbgoelflkfdncfnbbpdgmje/"]
    }
 
 3. chmod +x <pkg-root>/scripts/run-host.sh
@@ -218,7 +218,7 @@ Users on Linux and macOS may use Chromium, Brave, Edge, or Vivaldi. Each has a d
 - **Default:** Register for Google Chrome only (safest, covers the majority of users)
 - **Environment override:** `TASIFY_BROWSER=brave` or `TASIFY_BROWSER=chromium`
 - **Batch registration:** A helper script `register-all-browsers.sh` that iterates over all known browser paths
-- **Extension ID:** The same ID (`jnheoacefagphgahkdcmlfehcbcfajbe`) is used across all manifests
+- **Extension ID:** The same ID (`lbknkjhpipbgoelflkfdncfnbbpdgmje`) is used across all manifests
 
 ---
 

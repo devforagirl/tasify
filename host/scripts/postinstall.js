@@ -9,7 +9,7 @@ const __dirname = dirname(__filename);
 
 // -- Constants --
 const HOST_NAME = "com.tasify.claude.host";
-const EXTENSION_ID = "jnheoacefagphgahkdcmlfehcbcfajbe";
+const EXTENSION_ID = "lbknkjhpipbgoelflkfdncfnbbpdgmje";
 const HOOKS_PORT = 28934;
 const HOOKS_URL = `http://localhost:${HOOKS_PORT}/hooks`;
 const PKG_ROOT = join(__dirname, "..");
